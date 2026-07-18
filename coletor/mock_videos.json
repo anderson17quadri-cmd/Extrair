@@ -1,0 +1,62 @@
+[
+  {
+    "video_id": "7300000000000000001",
+    "title": "Corte degradê em 60 segundos 💈 #barbearia #fade #barber",
+    "_horas_atras": 6,
+    "play_count": 850000,
+    "digg_count": 92000,
+    "comment_count": 3100,
+    "share_count": 12500,
+    "author": {"unique_id": "barbeiro.pro", "nickname": "Barbeiro Pro"},
+    "share_url": "https://www.tiktok.com/@barbeiro.pro/video/7300000000000000001",
+    "wmplay": "https://example.com/wm/7300000000000000001.mp4"
+  },
+  {
+    "video_id": "7300000000000000002",
+    "title": "Antes e depois que chocou o cliente 😱 #barbearia #transformacao",
+    "_horas_atras": 20,
+    "play_count": 2400000,
+    "digg_count": 310000,
+    "comment_count": 8900,
+    "share_count": 45000,
+    "author": {"unique_id": "navalha.dourada", "nickname": "Navalha Dourada"},
+    "share_url": "https://www.tiktok.com/@navalha.dourada/video/7300000000000000002",
+    "wmplay": "https://example.com/wm/7300000000000000002.mp4"
+  },
+  {
+    "video_id": "7300000000000000003",
+    "title": "Dica rápida para alinhar a barba #barba #dicas",
+    "_horas_atras": 90,
+    "play_count": 15000,
+    "digg_count": 800,
+    "comment_count": 40,
+    "share_count": 60,
+    "author": {"unique_id": "barba.zen", "nickname": "Barba Zen"},
+    "share_url": "https://www.tiktok.com/@barba.zen/video/7300000000000000003",
+    "wmplay": "https://example.com/wm/7300000000000000003.mp4"
+  },
+  {
+    "video_id": "7300000000000000004",
+    "title": "POV: o cliente pede 'só uma limpeza' #barbearia #humor #pov",
+    "_horas_atras": 12,
+    "play_count": 1200000,
+    "digg_count": 210000,
+    "comment_count": 15000,
+    "share_count": 33000,
+    "author": {"unique_id": "tio.da.tesoura", "nickname": "Tio da Tesoura"},
+    "share_url": "https://www.tiktok.com/@tio.da.tesoura/video/7300000000000000004",
+    "wmplay": "https://example.com/wm/7300000000000000004.mp4"
+  },
+  {
+    "video_id": "7300000000000000005",
+    "title": "Tutorial: risco perfeito com navalha #barber #tutorial",
+    "_horas_atras": 200,
+    "play_count": 98000,
+    "digg_count": 4100,
+    "comment_count": 220,
+    "share_count": 900,
+    "author": {"unique_id": "mestre.riscas", "nickname": "Mestre das Riscas"},
+    "share_url": "https://www.tiktok.com/@mestre.riscas/video/7300000000000000005",
+    "wmplay": "https://example.com/wm/7300000000000000005.mp4"
+  }
+]

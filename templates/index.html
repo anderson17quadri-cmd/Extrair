@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Radar Viral</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+  <div class="max-w-6xl mx-auto px-4 py-8">
+    <header class="mb-8">
+      <h1 class="text-3xl font-bold">📡 Radar Viral</h1>
+      <p class="text-slate-400 mt-1">
+        Candidatos com score ≥ {{ threshold }} · reposta sempre com crédito ao autor original
+      </p>
+    </header>
+
+    <form method="get" class="flex flex-wrap items-end gap-3 mb-8 bg-slate-900 p-4 rounded-xl">
+      <label class="flex flex-col text-sm text-slate-400">
+        Nicho
+        <select name="nicho" class="mt-1 bg-slate-800 rounded-lg px-3 py-2 text-slate-100">
+          <option value="">Todos</option>
+          {% for n in nichos %}
+            <option value="{{ n }}" {% if n == nicho %}selected{% endif %}>{{ n }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label class="flex flex-col text-sm text-slate-400">
+        Período
+        <select name="periodo" class="mt-1 bg-slate-800 rounded-lg px-3 py-2 text-slate-100">
+          <option value="dia" {% if periodo == 'dia' %}selected{% endif %}>Hoje</option>
+          <option value="semana" {% if periodo == 'semana' %}selected{% endif %}>Última semana</option>
+          <option value="tudo" {% if periodo == 'tudo' %}selected{% endif %}>Tudo</option>
+        </select>
+      </label>
+      <label class="flex flex-col text-sm text-slate-400">
+        De
+        <input type="date" name="de" value="{{ de }}"
+               class="mt-1 bg-slate-800 rounded-lg px-3 py-2 text-slate-100">
+      </label>
+      <label class="flex flex-col text-sm text-slate-400">
+        Até
+        <input type="date" name="ate" value="{{ ate }}"
+               class="mt-1 bg-slate-800 rounded-lg px-3 py-2 text-slate-100">
+      </label>
+      <label class="flex items-center gap-2 text-sm text-slate-400 pb-2">
+        <input type="checkbox" name="usados" value="1" {% if incluir_usados %}checked{% endif %}
+               class="rounded">
+        Mostrar já usados
+      </label>
+      <button class="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-lg font-medium">
+        Filtrar
+      </button>
+    </form>
+
+    {% if not videos %}
+      <p class="text-slate-500 text-center py-16">
+        Sem candidatos para estes filtros. Corre o coletor:
+        <code class="bg-slate-800 px-2 py-1 rounded">python coletor.py --nicho meu_nicho</code>
+      </p>
+    {% endif %}
+
+    <div class="grid gap-6 md:grid-cols-2">
+      {% for v in videos %}
+      <article class="bg-slate-900 rounded-xl overflow-hidden flex flex-col {% if v.usado %}opacity-50{% endif %}">
+        <div class="aspect-video bg-black flex items-center justify-center">
+          {% if v.ficheiro_local %}
+            <video controls preload="metadata" class="w-full h-full object-contain"
+                   src="/media/{{ v.nicho }}/{{ v.id }}.mp4"></video>
+          {% else %}
+            <a href="{{ v.url_video }}" target="_blank" rel="noopener"
+               class="text-emerald-400 hover:underline text-sm px-4 text-center">
+              ▶ Ver no TikTok (ainda não descarregado)
+            </a>
+          {% endif %}
+        </div>
+        <div class="p-4 flex flex-col gap-3 flex-1">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <p class="font-semibold">@{{ v.username_autor }}</p>
+              <p class="text-sm text-slate-400">{{ v.descricao }}</p>
+            </div>
+            <span class="shrink-0 bg-emerald-600/20 text-emerald-400 text-sm font-bold px-3 py-1 rounded-full">
+              {{ "%.0f"|format(v.score_viral or 0) }}
+            </span>
+          </div>
+          <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-400">
+            <span>👁 {{ "{:,}".format(v.views or 0) }}</span>
+            <span>❤️ {{ "{:,}".format(v.likes or 0) }}</span>
+            <span>💬 {{ "{:,}".format(v.comentarios or 0) }}</span>
+            <span>🔁 {{ "{:,}".format(v.partilhas or 0) }}</span>
+            <span title="Nicho">🏷 {{ v.nicho }}</span>
+          </div>
+          <div class="bg-slate-800 rounded-lg p-3 text-sm">
+            <p class="text-slate-400 text-xs mb-1">Legenda sugerida (com crédito)</p>
+            <p id="legenda-{{ v.id }}">{{ v.legenda }}</p>
+          </div>
+          <div class="flex gap-2 mt-auto">
+            <button onclick="copiarLegenda('{{ v.id }}', this)"
+                    class="flex-1 bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg text-sm">
+              📋 Copiar legenda
+            </button>
+            <form method="post" action="/usado/{{ v.id }}" class="flex-1">
+              <input type="hidden" name="voltar" value="{{ request.full_path }}">
+              {% if v.usado %}
+                <input type="hidden" name="desfazer" value="1">
+                <button class="w-full bg-amber-700 hover:bg-amber-600 px-3 py-2 rounded-lg text-sm">
+                  ↩️ Repor como não usado
+                </button>
+              {% else %}
+                <button class="w-full bg-emerald-700 hover:bg-emerald-600 px-3 py-2 rounded-lg text-sm">
+                  ✅ Marcar como usado
+                </button>
+              {% endif %}
+            </form>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+
+  <script>
+    function copiarLegenda(id, botao) {
+      const texto = document.getElementById("legenda-" + id).textContent.trim();
+      navigator.clipboard.writeText(texto).then(() => {
+        const original = botao.textContent;
+        botao.textContent = "✅ Copiado!";
+        setTimeout(() => { botao.textContent = original; }, 1500);
+      });
+    }
+  </script>
+</body>
+</html>

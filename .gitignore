@@ -1,0 +1,12 @@
+# Segredos — nunca commitar
+.env
+
+# Base de dados e vídeos descarregados
+*.db
+downloads/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
