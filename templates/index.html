@@ -115,7 +115,7 @@
     <div class="flex flex-col gap-2">
       {% for v in videos %}
       <article class="bg-slate-900 rounded-lg overflow-hidden flex gap-2 p-2 {% if v.usado %}opacity-50{% endif %}">
-        <div class="w-24 h-32 shrink-0 bg-black rounded-md overflow-hidden flex items-center justify-center relative">
+        <div id="thumb-{{ v.id }}" class="w-24 h-32 shrink-0 bg-black rounded-md overflow-hidden flex items-center justify-center relative">
           {% if v.ficheiro_local %}
             <video preload="metadata" muted playsinline class="w-full h-full object-cover pointer-events-none"
                    src="/media/{{ v.nicho }}/{{ v.id }}.mp4"></video>
@@ -124,10 +124,10 @@
               ▶
             </button>
           {% else %}
-            <a href="{{ v.url_video }}" target="_blank" rel="noopener"
-               class="text-emerald-400 hover:underline text-xs px-1 text-center">
-              ▶ Ver original
-            </a>
+            <button type="button" onclick="baixarEAbrir('{{ v.id }}', '{{ v.nicho }}', this)"
+                    class="text-emerald-400 text-xs px-1 text-center">
+              ▶ Ver vídeo
+            </button>
           {% endif %}
         </div>
         <div class="flex flex-col gap-1 flex-1 min-w-0 text-sm">
@@ -158,19 +158,19 @@
                     class="bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-[11px]">
               📋 Legenda
             </button>
-            {% if v.ficheiro_local %}
-              <a href="/media/{{ v.nicho }}/{{ v.id }}.mp4?download=1" download
-                 class="bg-sky-700 hover:bg-sky-600 px-2 py-1 rounded text-[11px]">
-                ⬇️ Baixar
-              </a>
-            {% else %}
-              <form method="post" action="/baixar/{{ v.id }}">
-                <input type="hidden" name="voltar" value="{{ request.full_path }}">
-                <button class="bg-sky-700 hover:bg-sky-600 px-2 py-1 rounded text-[11px]">
+            <span id="baixar-{{ v.id }}">
+              {% if v.ficheiro_local %}
+                <a href="/media/{{ v.nicho }}/{{ v.id }}.mp4?download=1" download
+                   class="bg-sky-700 hover:bg-sky-600 px-2 py-1 rounded text-[11px]">
+                  ⬇️ Baixar
+                </a>
+              {% else %}
+                <button type="button" onclick="baixarEAbrir('{{ v.id }}', '{{ v.nicho }}', this)"
+                        class="bg-sky-700 hover:bg-sky-600 px-2 py-1 rounded text-[11px]">
                   ⬇️ Baixar
                 </button>
-              </form>
-            {% endif %}
+              {% endif %}
+            </span>
             <form method="post" action="/usado/{{ v.id }}">
               <input type="hidden" name="voltar" value="{{ request.full_path }}">
               {% if v.usado %}
@@ -207,6 +207,33 @@
         botao.textContent = "✅ Copiado!";
         setTimeout(() => { botao.textContent = original; }, 1500);
       });
+    }
+
+    async function baixarEAbrir(id, nicho, botao) {
+      const original = botao.textContent;
+      botao.disabled = true;
+      botao.textContent = "⏳";
+      try {
+        const resp = await fetch(`/baixar/${encodeURIComponent(id)}`, {method: "POST"});
+        if (!resp.ok) throw new Error("falha no download");
+        const url = `/media/${encodeURIComponent(nicho)}/${encodeURIComponent(id)}.mp4`;
+
+        const thumb = document.getElementById("thumb-" + id);
+        thumb.innerHTML = `
+          <video preload="metadata" muted playsinline class="w-full h-full object-cover pointer-events-none" src="${url}"></video>
+          <button type="button" onclick="abrirModal('${url}')"
+                  class="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-black/40 text-white text-2xl">▶</button>`;
+
+        const acaoBaixar = document.getElementById("baixar-" + id);
+        acaoBaixar.innerHTML = `
+          <a href="${url}?download=1" download class="bg-sky-700 hover:bg-sky-600 px-2 py-1 rounded text-[11px]">⬇️ Baixar</a>`;
+
+        abrirModal(url);
+      } catch (e) {
+        alert("Não foi possível descarregar este vídeo agora. Tenta outra vez.");
+        botao.disabled = false;
+        botao.textContent = original;
+      }
     }
 
     function abrirModal(url) {

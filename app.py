@@ -132,7 +132,7 @@ def media(nicho, video_id):
 
 @app.route("/baixar/<video_id>", methods=["POST"])
 def baixar(video_id):
-    """Descarrega o vídeo do candidato na hora, a pedido do dashboard."""
+    """Descarrega o vídeo do candidato na hora, a pedido do dashboard (via fetch/JS)."""
     with db.ligacao() as con:
         video = con.execute("SELECT * FROM videos WHERE id = ?", (video_id,)).fetchone()
     if video is None:
@@ -143,15 +143,17 @@ def baixar(video_id):
         try:
             caminho = baixar_video(video)
         except requests.RequestException as erro:
-            caminho = None
             print(f"[dashboard] erro ao baixar {video_id}: {erro}")
+            return {"ok": False, "erro": str(erro)}, 502
+        if not caminho:
+            return {"ok": False, "erro": "vídeo sem url de download"}, 502
         with db.ligacao() as con:
             con.execute(
                 "UPDATE videos SET ficheiro_local = ?, legenda_sugerida = ? WHERE id = ?",
                 (caminho, legenda, video_id),
             )
 
-    return redirect(request.form.get("voltar") or "/")
+    return {"ok": True}
 
 
 if __name__ == "__main__":
