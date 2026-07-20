@@ -52,6 +52,8 @@ def normalizar_item_tiktok(item: dict, nicho: str) -> dict:
     return {
         "id": f"tiktok_{video_id}" if video_id else "",
         "rede": "tiktok",
+        # país onde o TikTok detetou a publicação (código ISO-2, ex.: BR, PT)
+        "pais": (item.get("region") or "").upper(),
         "nicho": nicho,
         "autor": autor.get("nickname") or "",
         "username_autor": autor.get("unique_id") or "",
@@ -123,6 +125,9 @@ def normalizar_item_instagram(item: dict, nicho: str) -> dict:
     return {
         "id": f"instagram_{shortcode}" if shortcode else "",
         "rede": "instagram",
+        # a maioria das APIs de Instagram não expõe país por publicação;
+        # fica vazio a não ser que o provider devolva algo em location/country_code
+        "pais": ((item.get("location") or {}).get("country_code") or item.get("country_code") or "").upper(),
         "nicho": nicho,
         "autor": autor.get("full_name") or "",
         "username_autor": autor.get("username") or "",

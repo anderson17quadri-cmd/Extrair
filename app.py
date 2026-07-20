@@ -19,6 +19,7 @@ db.init_db()
 def _filtros():
     nicho = request.args.get("nicho", "").strip()
     rede = request.args.get("rede", "").strip()
+    pais = request.args.get("pais", "").strip().upper()
     periodo = request.args.get("periodo", "semana")
     de = request.args.get("de", "")
     ate = request.args.get("ate", "")
@@ -30,12 +31,12 @@ def _filtros():
         elif periodo == "semana":
             de = (date.today() - timedelta(days=7)).isoformat()
         # periodo == "tudo": sem limite de datas
-    return nicho, rede, periodo, de, ate, incluir_usados
+    return nicho, rede, pais, periodo, de, ate, incluir_usados
 
 
 @app.route("/")
 def index():
-    nicho, rede, periodo, de, ate, incluir_usados = _filtros()
+    nicho, rede, pais, periodo, de, ate, incluir_usados = _filtros()
 
     sql = "SELECT * FROM videos WHERE candidato = 1"
     params: list = []
@@ -45,6 +46,9 @@ def index():
     if rede:
         sql += " AND rede = ?"
         params.append(rede)
+    if pais:
+        sql += " AND pais = ?"
+        params.append(pais)
     if de:
         sql += " AND date(data_coleta) >= date(?)"
         params.append(de)
@@ -59,6 +63,8 @@ def index():
         videos = con.execute(sql, params).fetchall()
         nichos = [r["nicho"] for r in con.execute(
             "SELECT DISTINCT nicho FROM videos ORDER BY nicho").fetchall()]
+        paises = [r["pais"] for r in con.execute(
+            "SELECT DISTINCT pais FROM videos WHERE pais != '' ORDER BY pais").fetchall()]
 
     cartoes = []
     for v in videos:
@@ -71,8 +77,10 @@ def index():
         "index.html",
         videos=cartoes,
         nichos=nichos,
+        paises=paises,
         nicho=nicho,
         rede=rede,
+        pais=pais,
         periodo=periodo,
         de=de,
         ate=ate,

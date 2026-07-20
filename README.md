@@ -111,9 +111,22 @@ python app.py
 ```
 
 - Lista candidatos do dia/semana ordenados por score, com preview, métricas e legenda.
-- Filtro por nicho e intervalo de datas.
+- Filtro por nicho, **país**, rede e intervalo de datas.
 - Botão **📋 Copiar legenda** (já com o crédito ao autor).
+- Botão **⬇️ Baixar vídeo** (descarrega na hora, se ainda não tiver sido descarregado).
 - Botão **✅ Marcar como usado** para não repetir sugestões (reversível).
+
+### País
+
+O TikTok devolve o país onde cada vídeo foi detetado (campo `region`, ex.: `BR`,
+`PT`, `US`) e guardamos isso por vídeo. **Testámos ao vivo e confirmámos que a
+API não filtra a pesquisa por país** — pedir `region=BR` devolve exatamente os
+mesmos resultados que não pedir nada (parece ser ignorado no plano gratuito).
+Por isso o filtro de país funciona **na dashboard**, sobre o que já foi
+coletado, e não como parâmetro de coleta: quanto mais vídeos coletares (maior
+`--quantidade`, mais coletas ao longo do tempo), mais variedade de países vais
+ter para filtrar. Se um dia confirmares que a tua conta RapidAPI tem um plano
+que suporta filtro por região na API, avisa que ligamos isso em `buscar_api_tiktok()`.
 
 ## Agendar o coletor
 

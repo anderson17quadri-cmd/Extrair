@@ -34,6 +34,15 @@
         </select>
       </label>
       <label class="flex flex-col text-sm text-slate-400">
+        País
+        <select name="pais" class="mt-1 bg-slate-800 rounded-lg px-3 py-2 text-slate-100">
+          <option value="">Todos</option>
+          {% for p in paises %}
+            <option value="{{ p }}" {% if p == pais %}selected{% endif %}>{{ p }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label class="flex flex-col text-sm text-slate-400">
         Período
         <select name="periodo" class="mt-1 bg-slate-800 rounded-lg px-3 py-2 text-slate-100">
           <option value="dia" {% if periodo == 'dia' %}selected{% endif %}>Hoje</option>
@@ -105,6 +114,7 @@
             <span>💬 {{ "{:,}".format(v.comentarios or 0) }}</span>
             <span>🔁 {{ "{:,}".format(v.partilhas or 0) }}</span>
             <span title="Nicho">🏷 {{ v.nicho }}</span>
+            {% if v.pais %}<span title="País">🌎 {{ v.pais }}</span>{% endif %}
           </div>
           <div class="bg-slate-800 rounded-lg p-3 text-sm">
             <p class="text-slate-400 text-xs mb-1">Legenda sugerida (com crédito)</p>
