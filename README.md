@@ -63,26 +63,22 @@ endpoint `/feed/search`) — não precisas de mexer em nada.
 
 #### Instagram
 
-Ainda não testado com uma chamada real (não tinha uma chave de Instagram para
-validar). Passos:
+Validado e a funcionar com a API **"Instagram Social"** (RapidAPI, por trás
+dela está a SteadyAPI) — host `instagram-social.p.rapidapi.com`, endpoint
+`/api/v1/instagram/search`. A mesma `RAPIDAPI_KEY` do TikTok serve; só
+precisas de subscrever essa API (plano gratuito) na tua conta RapidAPI.
 
-1. No [RapidAPI Hub](https://rapidapi.com), subscreve uma API de Instagram
-   com pesquisa por hashtag (ex.: "Instagram Scraper API2" ou "API de
-   Estatísticas do Instagram").
-2. Normalmente a **mesma `RAPIDAPI_KEY`** que já usas para o TikTok funciona —
-   só muda o host. Atualiza no `.env`:
-   ```
-   RAPIDAPI_HOST_INSTAGRAM=<host que aparecer no painel de testes>
-   RAPIDAPI_ENDPOINT_INSTAGRAM=<endpoint de pesquisa por hashtag>
-   ```
-3. Testa um pedido real (com `curl` ou no painel "Test Endpoint" do RapidAPI)
-   e compara os nomes dos campos com os que `normalizar_item_instagram()` em
-   `coletor.py` espera (`shortcode`, `caption`, `like_count`,
-   `video_view_count`, `comment_count`, `owner.username`, `video_url`). Se
-   forem diferentes, ajusta só essa função — foi exatamente este processo
-   que corrigiu o TikTok.
-4. Enquanto isso, `--mock` já funciona para o Instagram
-   (`coletor/mock_videos_instagram.json`), para testares o dashboard.
+Limitações reais desta fonte, descobertas testando (não são bugs nossos):
+- O Instagram **esconde o número de visualizações** (`play_count`) na maioria
+  dos posts públicos. Por isso `score.py` estima views a partir dos likes
+  (`views ≈ likes × 10`) quando o valor real não vem na resposta — mantém os
+  scores na mesma escala do TikTok.
+- **País não vem preenchido** na maioria dos posts (campo `location` quase
+  sempre vazio) — o filtro de país na dashboard só mostra o que existir.
+- A pesquisa é por **palavra-chave geral**, não uma hashtag "oficial" isolada
+  — pode trazer resultados um pouco mais amplos que o TikTok.
+- Só guardamos vídeos/Reels (`media_type == 2`); fotos e carrosséis são
+  descartados na coleta, porque o objetivo é vídeo.
 
 ### 2. Score viral
 
@@ -90,6 +86,9 @@ validar). Passos:
 score = (views / horas desde publicação) × (1 + PESO_ENGAGEMENT × engagement)
 engagement = (likes + comentários + partilhas) / views
 ```
+
+Se `views` vier a 0 (comum no Instagram), estima-se `views ≈ likes × 10` antes de
+aplicar a mesma fórmula, para os scores ficarem na mesma escala do TikTok.
 
 Vídeos com score ≥ `SCORE_THRESHOLD` (configurável no `.env`) ficam marcados como
 **candidato**. Recalcular manualmente: `python score.py --nicho barbearia`.

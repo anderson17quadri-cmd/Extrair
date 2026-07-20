@@ -20,12 +20,12 @@ RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY", "")
 RAPIDAPI_HOST = os.getenv("RAPIDAPI_HOST", "tiktok-scraper7.p.rapidapi.com")
 RAPIDAPI_ENDPOINT = os.getenv("RAPIDAPI_ENDPOINT", "/feed/search")
 
-# Instagram (ajusta ao endpoint que subscreveres — ver README)
+# Instagram (Instagram Social / SteadyAPI — validado e a funcionar)
 RAPIDAPI_HOST_INSTAGRAM = os.getenv(
-    "RAPIDAPI_HOST_INSTAGRAM", "instagram-scraper-api2.p.rapidapi.com"
+    "RAPIDAPI_HOST_INSTAGRAM", "instagram-social.p.rapidapi.com"
 )
 RAPIDAPI_ENDPOINT_INSTAGRAM = os.getenv(
-    "RAPIDAPI_ENDPOINT_INSTAGRAM", "/v1/hashtag"
+    "RAPIDAPI_ENDPOINT_INSTAGRAM", "/api/v1/instagram/search"
 )
 
 # --- Score viral --------------------------------------------------------

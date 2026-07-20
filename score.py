@@ -4,15 +4,23 @@ score_viral = (views / horas desde publicação) * (1 + PESO_ENGAGEMENT * engage
 engagement  = (likes + comentários + partilhas) / views
 
 Vídeos com score >= SCORE_THRESHOLD ficam marcados como "candidato".
+
+O Instagram normalmente não expõe o número de visualizações (play_count fica
+null na maioria dos posts) — nesse caso estimamos as views a partir dos likes
+(proxy comum: views ≈ likes × 10) para manter os scores na mesma escala do
+TikTok e comparáveis no mesmo threshold.
 """
 from datetime import datetime, timezone
 
 import config
 import db
 
+MULTIPLICADOR_VIEWS_ESTIMADAS = 10
+
 
 def calcular_score(video) -> float:
-    views = video["views"] or 0
+    likes = video["likes"] or 0
+    views = video["views"] or (likes * MULTIPLICADOR_VIEWS_ESTIMADAS)
     if views <= 0:
         return 0.0
 

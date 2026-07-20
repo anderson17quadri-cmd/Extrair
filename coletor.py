@@ -95,57 +95,54 @@ def buscar_api_tiktok(hashtag: str, quantidade: int) -> list[dict]:
 
 
 # --------------------------------------------------------------------------
-# Instagram — AINDA POR VALIDAR: os nomes de campos abaixo são os mais comuns
-# entre APIs de Instagram no RapidAPI, mas cada provider varia. Assim que
-# subscreveres uma (ex.: "instagram-scraper-api2" ou "API de Estatísticas do
-# Instagram"), testa um pedido real e ajusta esta função aos campos que
-# vierem de facto — foi exatamente este processo que corrigiu o TikTok.
+# Instagram — validado com chamadas reais à API "Instagram Social" (RapidAPI,
+# por trás dela está a SteadyAPI). media_type: 1 = foto, 2 = vídeo/reel,
+# 8 = carrossel — só guardamos vídeos (media_type == 2).
 # --------------------------------------------------------------------------
 
-def normalizar_item_instagram(item: dict, nicho: str) -> dict:
-    """Converte um item de uma API de hashtag do Instagram no formato da tabela.
+# Instagram esconde o play_count na maioria dos posts públicos — por isso o
+# score (score.py) estima views a partir dos likes quando views vier a 0.
 
-    Instagram não expõe contagem de partilhas publicamente — fica sempre 0.
-    IMPORTANTE: gravamos o vídeo tal como a API o devolve, sem qualquer
-    edição — a marca/autoria do Instagram não é removida nem sobreposta.
+def normalizar_item_instagram(item: dict, nicho: str) -> dict:
+    """Converte um item da API Instagram Social no formato da nossa tabela.
+
+    IMPORTANTE: `media_url` vem direto do CDN do Instagram tal como a API
+    devolve — nunca processamos, cortamos ou editamos o vídeo.
     """
-    autor = item.get("owner") or item.get("user") or {}
+    autor = item.get("user") or {}
     descricao = item.get("caption") or ""
-    if not descricao:
-        edges = (item.get("edge_media_to_caption") or {}).get("edges") or []
-        if edges:
-            descricao = edges[0].get("node", {}).get("text", "")
-    criado = item.get("taken_at_timestamp") or item.get("taken_at") or 0
+    criado = item.get("taken_at") or 0
     data_pub = (
         datetime.fromtimestamp(int(criado), tz=timezone.utc).isoformat()
         if criado
         else None
     )
-    shortcode = str(item.get("shortcode") or item.get("code") or item.get("id") or "")
+    shortcode = str(item.get("shortcode") or item.get("id") or "")
+    localizacao = item.get("location") or {}
     return {
         "id": f"instagram_{shortcode}" if shortcode else "",
         "rede": "instagram",
-        # a maioria das APIs de Instagram não expõe país por publicação;
-        # fica vazio a não ser que o provider devolva algo em location/country_code
-        "pais": ((item.get("location") or {}).get("country_code") or item.get("country_code") or "").upper(),
+        # a maioria dos posts não vem com localização — fica vazio nesse caso
+        "pais": (localizacao.get("country_code") or "").upper(),
         "nicho": nicho,
         "autor": autor.get("full_name") or "",
         "username_autor": autor.get("username") or "",
-        "descricao": descricao or "",
+        "descricao": descricao,
         "hashtags": _extrair_hashtags(descricao),
-        "views": int(item.get("video_view_count") or item.get("play_count") or 0),
-        "likes": int(item.get("like_count") or item.get("edge_liked_by", {}).get("count", 0) or 0),
-        "comentarios": int(item.get("comment_count") or item.get("edge_media_to_comment", {}).get("count", 0) or 0),
-        "partilhas": 0,
+        "views": int(item.get("play_count") or 0),
+        "likes": int(item.get("like_count") or 0),
+        "comentarios": int(item.get("comment_count") or 0),
+        "partilhas": 0,  # Instagram não expõe partilhas publicamente
         "data_publicacao": data_pub,
-        "url_video": f"https://www.instagram.com/reel/{shortcode}/" if shortcode else "",
-        "url_download": item.get("video_url") or item.get("video_download_url") or "",
+        "url_video": item.get("permalink")
+        or (f"https://www.instagram.com/p/{shortcode}/" if shortcode else ""),
+        "url_download": item.get("media_url") or "",
         "data_coleta": datetime.now(timezone.utc).isoformat(),
     }
 
 
 def buscar_api_instagram(hashtag: str, quantidade: int) -> list[dict]:
-    """Pesquisa reels por hashtag via RapidAPI (endpoint configurável no .env)."""
+    """Pesquisa posts por palavra-chave/hashtag via /api/v1/instagram/search."""
     hashtag = hashtag.lstrip("#")
     url = f"https://{config.RAPIDAPI_HOST_INSTAGRAM}{config.RAPIDAPI_ENDPOINT_INSTAGRAM}"
     resposta = requests.get(
@@ -153,23 +150,20 @@ def buscar_api_instagram(hashtag: str, quantidade: int) -> list[dict]:
         headers={
             "x-rapidapi-key": config.RAPIDAPI_KEY,
             "x-rapidapi-host": config.RAPIDAPI_HOST_INSTAGRAM,
+            # sem este header a API devolve um redirect HTML em vez de JSON
+            "Accept": "application/json",
         },
-        params={"hashtag": hashtag, "count": quantidade},
+        params={"search": hashtag},
         timeout=30,
     )
     resposta.raise_for_status()
     corpo = resposta.json()
-    dados = corpo.get("data") or corpo
-    itens = (
-        dados.get("items")
-        or dados.get("medias")
-        or dados.get("edges")
-        or dados.get("posts")
-        or []
-    )
-    if not itens:
-        print(f"Aviso: resposta sem posts: {json.dumps(corpo)[:300]}")
-    return itens
+    itens = corpo.get("body") or []
+    # media_type: 2 = vídeo/reel — descarta fotos (1) e carrosséis (8)
+    videos = [item for item in itens if item.get("media_type") == 2]
+    if not videos:
+        print(f"Aviso: sem vídeos para '{hashtag}' ({len(itens)} posts recebidos, nenhum vídeo).")
+    return videos[:quantidade]
 
 
 REDES = {
@@ -183,7 +177,7 @@ def buscar_mock(rede: str) -> list[dict]:
     ficheiro = Path(__file__).parent / "coletor" / nome_ficheiro
     itens = json.loads(ficheiro.read_text(encoding="utf-8"))
     agora = datetime.now(timezone.utc).timestamp()
-    campo_tempo = "create_time" if rede == "tiktok" else "taken_at_timestamp"
+    campo_tempo = "create_time" if rede == "tiktok" else "taken_at"
     # _horas_atras torna os dados de exemplo sempre "recentes" para o score
     for item in itens:
         item.setdefault(campo_tempo, int(agora - item.pop("_horas_atras", 24) * 3600))

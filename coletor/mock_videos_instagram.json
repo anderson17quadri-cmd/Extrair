@@ -1,32 +1,41 @@
 [
   {
+    "id": "3398000000000000001",
     "shortcode": "Cx1AbCdEfGh",
+    "media_type": 2,
     "caption": "Receita rápida de bolo de cenoura 🍰 #receitas #bolo #culinaria",
     "_horas_atras": 5,
-    "video_view_count": 620000,
+    "play_count": null,
     "like_count": 58000,
     "comment_count": 2100,
-    "owner": {"username": "cozinha.facil", "full_name": "Cozinha Fácil"},
-    "video_url": "https://example.com/ig/Cx1AbCdEfGh.mp4"
+    "user": {"username": "cozinha.facil", "full_name": "Cozinha Fácil"},
+    "permalink": "https://www.instagram.com/p/Cx1AbCdEfGh/",
+    "media_url": "https://example.com/ig/Cx1AbCdEfGh.mp4"
   },
   {
+    "id": "3398000000000000002",
     "shortcode": "Cx2BcDeFgHi",
+    "media_type": 2,
     "caption": "3 exercícios para fazer em casa 💪 #fitness #treino #saude",
     "_horas_atras": 15,
-    "video_view_count": 1800000,
+    "play_count": null,
     "like_count": 210000,
     "comment_count": 5400,
-    "owner": {"username": "treino.diario", "full_name": "Treino Diário"},
-    "video_url": "https://example.com/ig/Cx2BcDeFgHi.mp4"
+    "user": {"username": "treino.diario", "full_name": "Treino Diário"},
+    "permalink": "https://www.instagram.com/p/Cx2BcDeFgHi/",
+    "media_url": "https://example.com/ig/Cx2BcDeFgHi.mp4"
   },
   {
+    "id": "3398000000000000003",
     "shortcode": "Cx3CdEfGhIj",
+    "media_type": 2,
     "caption": "Meu cão fazendo cara de bravo 🐶 #pets #cachorro #fofo",
     "_horas_atras": 120,
-    "video_view_count": 45000,
+    "play_count": null,
     "like_count": 3200,
     "comment_count": 150,
-    "owner": {"username": "pets.divertidos", "full_name": "Pets Divertidos"},
-    "video_url": "https://example.com/ig/Cx3CdEfGhIj.mp4"
+    "user": {"username": "pets.divertidos", "full_name": "Pets Divertidos"},
+    "permalink": "https://www.instagram.com/p/Cx3CdEfGhIj/",
+    "media_url": "https://example.com/ig/Cx3CdEfGhIj.mp4"
   }
 ]
