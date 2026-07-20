@@ -4,9 +4,10 @@ from contextlib import contextmanager
 
 import config
 
-SCHEMA = """
+SCHEMA_TABELA = """
 CREATE TABLE IF NOT EXISTS videos (
     id              TEXT PRIMARY KEY,
+    rede            TEXT NOT NULL DEFAULT 'tiktok',
     nicho           TEXT NOT NULL,
     autor           TEXT,
     username_autor  TEXT,
@@ -26,8 +27,12 @@ CREATE TABLE IF NOT EXISTS videos (
     ficheiro_local  TEXT,
     legenda_sugerida TEXT
 );
+"""
+
+SCHEMA_INDICES = """
 CREATE INDEX IF NOT EXISTS idx_videos_nicho ON videos (nicho);
 CREATE INDEX IF NOT EXISTS idx_videos_candidato ON videos (candidato, score_viral);
+CREATE INDEX IF NOT EXISTS idx_videos_rede ON videos (rede);
 """
 
 
@@ -44,7 +49,12 @@ def ligacao():
 
 def init_db():
     with ligacao() as con:
-        con.executescript(SCHEMA)
+        con.executescript(SCHEMA_TABELA)
+        # migração: bases de dados criadas antes da coluna "rede" existir
+        colunas = [r["name"] for r in con.execute("PRAGMA table_info(videos)").fetchall()]
+        if "rede" not in colunas:
+            con.execute("ALTER TABLE videos ADD COLUMN rede TEXT NOT NULL DEFAULT 'tiktok'")
+        con.executescript(SCHEMA_INDICES)
 
 
 def inserir_video(video: dict) -> bool:
@@ -52,10 +62,10 @@ def inserir_video(video: dict) -> bool:
     with ligacao() as con:
         cur = con.execute(
             """INSERT OR IGNORE INTO videos
-               (id, nicho, autor, username_autor, descricao, hashtags,
+               (id, rede, nicho, autor, username_autor, descricao, hashtags,
                 views, likes, comentarios, partilhas,
                 data_publicacao, url_video, url_download, data_coleta)
-               VALUES (:id, :nicho, :autor, :username_autor, :descricao, :hashtags,
+               VALUES (:id, :rede, :nicho, :autor, :username_autor, :descricao, :hashtags,
                        :views, :likes, :comentarios, :partilhas,
                        :data_publicacao, :url_video, :url_download, :data_coleta)""",
             video,

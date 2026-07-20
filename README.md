@@ -40,15 +40,49 @@ se o formato da resposta for diferente, a função `normalizar_item()` em
 
 ### 1. Coletar vídeos de um nicho
 
+O `--nicho` é livre — usa o que quiseres, não fica preso a "barbearia":
+
 ```bash
-python coletor.py --nicho barbearia                 # usa a hashtag "barbearia"
-python coletor.py --nicho barbearia --hashtag barber --quantidade 30
-python coletor.py --nicho barbearia --descarregar   # coleta + score + download dos candidatos
-python coletor.py --nicho barbearia --mock          # dados de exemplo, sem gastar API
+python coletor.py --nicho fitness                    # TikTok (rede por omissão)
+python coletor.py --nicho fitness --rede instagram    # o mesmo nicho, no Instagram
+python coletor.py --nicho receitas --hashtag receitasfaceis --quantidade 30
+python coletor.py --nicho pets --descarregar          # coleta + score + download dos candidatos
+python coletor.py --nicho pets --mock                 # dados de exemplo, sem gastar API
+python coletor.py --nicho pets --rede instagram --mock
 ```
 
 Cada coleta guarda os vídeos no SQLite (`radar_viral.db`), ignora duplicados
-(chave única por `id` do vídeo) e recalcula automaticamente o score viral.
+(chave única por `id`, prefixado com a rede — `tiktok_...` / `instagram_...`)
+e recalcula automaticamente o score viral. TikTok e Instagram do mesmo nicho
+aparecem juntos no dashboard, com filtro por rede.
+
+#### TikTok
+
+Já validado e a funcionar (host `tiktok-scraper7.p.rapidapi.com`,
+endpoint `/feed/search`) — não precisas de mexer em nada.
+
+#### Instagram
+
+Ainda não testado com uma chamada real (não tinha uma chave de Instagram para
+validar). Passos:
+
+1. No [RapidAPI Hub](https://rapidapi.com), subscreve uma API de Instagram
+   com pesquisa por hashtag (ex.: "Instagram Scraper API2" ou "API de
+   Estatísticas do Instagram").
+2. Normalmente a **mesma `RAPIDAPI_KEY`** que já usas para o TikTok funciona —
+   só muda o host. Atualiza no `.env`:
+   ```
+   RAPIDAPI_HOST_INSTAGRAM=<host que aparecer no painel de testes>
+   RAPIDAPI_ENDPOINT_INSTAGRAM=<endpoint de pesquisa por hashtag>
+   ```
+3. Testa um pedido real (com `curl` ou no painel "Test Endpoint" do RapidAPI)
+   e compara os nomes dos campos com os que `normalizar_item_instagram()` em
+   `coletor.py` espera (`shortcode`, `caption`, `like_count`,
+   `video_view_count`, `comment_count`, `owner.username`, `video_url`). Se
+   forem diferentes, ajusta só essa função — foi exatamente este processo
+   que corrigiu o TikTok.
+4. Enquanto isso, `--mock` já funciona para o Instagram
+   (`coletor/mock_videos_instagram.json`), para testares o dashboard.
 
 ### 2. Score viral
 

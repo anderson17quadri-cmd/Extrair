@@ -26,6 +26,14 @@
         </select>
       </label>
       <label class="flex flex-col text-sm text-slate-400">
+        Rede
+        <select name="rede" class="mt-1 bg-slate-800 rounded-lg px-3 py-2 text-slate-100">
+          <option value="">Todas</option>
+          <option value="tiktok" {% if rede == 'tiktok' %}selected{% endif %}>TikTok</option>
+          <option value="instagram" {% if rede == 'instagram' %}selected{% endif %}>Instagram</option>
+        </select>
+      </label>
+      <label class="flex flex-col text-sm text-slate-400">
         Período
         <select name="periodo" class="mt-1 bg-slate-800 rounded-lg px-3 py-2 text-slate-100">
           <option value="dia" {% if periodo == 'dia' %}selected{% endif %}>Hoje</option>
@@ -77,6 +85,13 @@
         <div class="p-4 flex flex-col gap-3 flex-1">
           <div class="flex items-start justify-between gap-2">
             <div>
+              <p class="font-semibold flex items-center gap-2">
+                {% if v.rede == 'instagram' %}
+                  <span class="text-pink-400 text-xs font-bold uppercase tracking-wide">📸 Instagram</span>
+                {% else %}
+                  <span class="text-slate-300 text-xs font-bold uppercase tracking-wide">🎵 TikTok</span>
+                {% endif %}
+              </p>
               <p class="font-semibold">@{{ v.username_autor }}</p>
               <p class="text-sm text-slate-400">{{ v.descricao }}</p>
             </div>

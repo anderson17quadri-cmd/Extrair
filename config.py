@@ -12,11 +12,21 @@ load_dotenv(BASE_DIR / ".env")
 
 # --- RapidAPI -----------------------------------------------------------
 # A chave vem SEMPRE do .env — ver .env.example
+# A mesma RAPIDAPI_KEY costuma servir para qualquer API que subscrevas na tua
+# conta RapidAPI — só o host/endpoint muda consoante a rede social.
 RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY", "")
-# Host do endpoint TikTok no RapidAPI (por omissão: tiktok-scraper7)
+
+# TikTok (por omissão: tiktok-scraper7 — validado e a funcionar)
 RAPIDAPI_HOST = os.getenv("RAPIDAPI_HOST", "tiktok-scraper7.p.rapidapi.com")
-# Caminho do endpoint de pesquisa por palavra-chave/hashtag
 RAPIDAPI_ENDPOINT = os.getenv("RAPIDAPI_ENDPOINT", "/feed/search")
+
+# Instagram (ajusta ao endpoint que subscreveres — ver README)
+RAPIDAPI_HOST_INSTAGRAM = os.getenv(
+    "RAPIDAPI_HOST_INSTAGRAM", "instagram-scraper-api2.p.rapidapi.com"
+)
+RAPIDAPI_ENDPOINT_INSTAGRAM = os.getenv(
+    "RAPIDAPI_ENDPOINT_INSTAGRAM", "/v1/hashtag"
+)
 
 # --- Score viral --------------------------------------------------------
 # Vídeos com score >= threshold ficam marcados como "candidato"
