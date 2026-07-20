@@ -15,8 +15,8 @@ load_dotenv(BASE_DIR / ".env")
 RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY", "")
 # Host do endpoint TikTok no RapidAPI (por omissão: tiktok-scraper7)
 RAPIDAPI_HOST = os.getenv("RAPIDAPI_HOST", "tiktok-scraper7.p.rapidapi.com")
-# Caminho do endpoint de pesquisa por hashtag/challenge
-RAPIDAPI_ENDPOINT = os.getenv("RAPIDAPI_ENDPOINT", "/challenge/posts")
+# Caminho do endpoint de pesquisa por palavra-chave/hashtag
+RAPIDAPI_ENDPOINT = os.getenv("RAPIDAPI_ENDPOINT", "/feed/search")
 
 # --- Score viral --------------------------------------------------------
 # Vídeos com score >= threshold ficam marcados como "candidato"

@@ -29,11 +29,12 @@ cp .env.example .env
 nano .env   # cola a tua chave em RAPIDAPI_KEY=...
 ```
 
-A chave obtém-se em [rapidapi.com](https://rapidapi.com) subscrevendo um endpoint de
-TikTok (por omissão o código espera o **tiktok-scraper7**, endpoint
-`/challenge/posts`). Se usares outro endpoint, ajusta `RAPIDAPI_HOST` /
-`RAPIDAPI_ENDPOINT` no `.env` e, se o formato da resposta for diferente, a função
-`normalizar_item()` em `coletor.py`.
+A chave obtém-se em [rapidapi.com](https://rapidapi.com) subscrevendo a API
+**tiktok-scraper7** (`tiktok-scraper7.p.rapidapi.com`), endpoint `/feed/search`
+(pesquisa por palavra-chave/hashtag, testado e validado). Se usares outro
+endpoint ou provider, ajusta `RAPIDAPI_HOST` / `RAPIDAPI_ENDPOINT` no `.env` e,
+se o formato da resposta for diferente, a função `normalizar_item()` em
+`coletor.py`.
 
 ## Uso
 

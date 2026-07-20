@@ -64,7 +64,7 @@ def normalizar_item(item: dict, nicho: str) -> dict:
 
 
 def buscar_api(hashtag: str, quantidade: int) -> list[dict]:
-    """Chama o endpoint de hashtag/challenge do RapidAPI."""
+    """Pesquisa vídeos por palavra-chave/hashtag via /feed/search (RapidAPI)."""
     if not config.RAPIDAPI_KEY:
         sys.exit(
             "ERRO: RAPIDAPI_KEY não definida. Copia .env.example para .env "
@@ -77,7 +77,7 @@ def buscar_api(hashtag: str, quantidade: int) -> list[dict]:
             "x-rapidapi-key": config.RAPIDAPI_KEY,
             "x-rapidapi-host": config.RAPIDAPI_HOST,
         },
-        params={"challenge_name": hashtag, "count": quantidade},
+        params={"keywords": hashtag, "count": quantidade, "cursor": 0},
         timeout=30,
     )
     resposta.raise_for_status()
