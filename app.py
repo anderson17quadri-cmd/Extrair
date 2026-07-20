@@ -8,6 +8,7 @@ from datetime import date, timedelta
 import requests
 from flask import Flask, abort, redirect, render_template, request, send_from_directory
 
+import coletor
 import config
 import db
 from downloader import baixar_video, gerar_legenda
@@ -86,7 +87,30 @@ def index():
         ate=ate,
         incluir_usados=incluir_usados,
         threshold=config.SCORE_THRESHOLD,
+        erro=request.args.get("erro", ""),
     )
+
+
+@app.route("/coletar", methods=["POST"])
+def nova_coleta():
+    """Dispara uma coleta real a partir da dashboard, sem precisar do terminal."""
+    nicho = request.form.get("nicho", "").strip()
+    hashtag = request.form.get("hashtag", "").strip() or nicho
+    rede = request.form.get("rede", "tiktok").strip() or "tiktok"
+
+    if not nicho:
+        return redirect("/?erro=Escreve+um+nicho+antes+de+coletar")
+    if not config.RAPIDAPI_KEY:
+        return redirect("/?erro=Falta+a+RAPIDAPI_KEY+no+.env+do+servidor")
+
+    try:
+        coletor.coletar(nicho, hashtag, quantidade=20, rede=rede, mock=False)
+    except requests.RequestException as erro:
+        return redirect(f"/?nicho={nicho}&rede={rede}&periodo=tudo&erro=Erro+na+API%3A+{erro}")
+    except Exception as erro:
+        return redirect(f"/?nicho={nicho}&rede={rede}&periodo=tudo&erro={erro}")
+
+    return redirect(f"/?nicho={nicho}&rede={rede}&periodo=tudo")
 
 
 @app.route("/usado/<video_id>", methods=["POST"])

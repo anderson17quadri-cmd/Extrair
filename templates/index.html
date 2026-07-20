@@ -16,6 +16,40 @@
       </button>
     </header>
 
+    {% if erro %}
+      <p class="mb-3 bg-red-950 border border-red-800 text-red-300 text-xs rounded-lg px-3 py-2">
+        ⚠️ {{ erro }}
+      </p>
+    {% endif %}
+
+    <form method="post" action="/coletar" onsubmit="iniciarColeta(this)"
+          class="flex flex-wrap items-end gap-2 mb-3 bg-slate-900 p-3 rounded-xl text-sm">
+      <label class="flex flex-col text-xs text-slate-400 flex-1 min-w-[90px]">
+        Nicho
+        <input type="text" name="nicho" list="nichos-existentes" required
+               placeholder="ex.: fitness"
+               class="mt-1 bg-slate-800 rounded-lg px-2 py-1.5 text-slate-100">
+        <datalist id="nichos-existentes">
+          {% for n in nichos %}<option value="{{ n }}">{% endfor %}
+        </datalist>
+      </label>
+      <label class="flex flex-col text-xs text-slate-400 flex-1 min-w-[90px]">
+        Hashtag <span class="normal-case text-slate-500">(opcional)</span>
+        <input type="text" name="hashtag" placeholder="= nicho se vazio"
+               class="mt-1 bg-slate-800 rounded-lg px-2 py-1.5 text-slate-100">
+      </label>
+      <label class="flex flex-col text-xs text-slate-400">
+        Rede
+        <select name="rede" class="mt-1 bg-slate-800 rounded-lg px-2 py-1.5 text-slate-100">
+          <option value="tiktok">TikTok</option>
+          <option value="instagram">Instagram</option>
+        </select>
+      </label>
+      <button class="bg-sky-600 hover:bg-sky-500 px-4 py-2 rounded-lg font-medium">
+        🔍 Coletar agora
+      </button>
+    </form>
+
     <form id="filtros" method="get" class="hidden grid grid-cols-2 gap-2 mb-4 bg-slate-900 p-3 rounded-xl text-sm">
       <label class="flex flex-col text-xs text-slate-400">
         Nicho
@@ -81,10 +115,14 @@
     <div class="flex flex-col gap-2">
       {% for v in videos %}
       <article class="bg-slate-900 rounded-lg overflow-hidden flex gap-2 p-2 {% if v.usado %}opacity-50{% endif %}">
-        <div class="w-24 h-32 shrink-0 bg-black rounded-md overflow-hidden flex items-center justify-center">
+        <div class="w-24 h-32 shrink-0 bg-black rounded-md overflow-hidden flex items-center justify-center relative">
           {% if v.ficheiro_local %}
-            <video controls preload="metadata" class="w-full h-full object-cover"
+            <video preload="metadata" muted playsinline class="w-full h-full object-cover pointer-events-none"
                    src="/media/{{ v.nicho }}/{{ v.id }}.mp4"></video>
+            <button type="button" onclick="abrirModal('/media/{{ v.nicho }}/{{ v.id }}.mp4')"
+                    class="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-black/40 text-white text-2xl">
+              ▶
+            </button>
           {% else %}
             <a href="{{ v.url_video }}" target="_blank" rel="noopener"
                class="text-emerald-400 hover:underline text-xs px-1 text-center">
@@ -153,6 +191,14 @@
     </div>
   </div>
 
+  <div id="modal-video" onclick="fecharModal(event)"
+       class="hidden fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
+    <button type="button" onclick="fecharModal(event)"
+            class="absolute top-4 right-4 text-white text-3xl leading-none">✕</button>
+    <video id="modal-video-player" controls autoplay playsinline
+           class="max-w-full max-h-full rounded-lg"></video>
+  </div>
+
   <script>
     function copiarLegenda(id, botao) {
       const texto = document.getElementById("legenda-" + id).textContent.trim();
@@ -161,6 +207,28 @@
         botao.textContent = "✅ Copiado!";
         setTimeout(() => { botao.textContent = original; }, 1500);
       });
+    }
+
+    function abrirModal(url) {
+      const modal = document.getElementById("modal-video");
+      const player = document.getElementById("modal-video-player");
+      player.src = url;
+      modal.classList.remove("hidden");
+    }
+
+    function fecharModal(evento) {
+      if (evento.target.id !== "modal-video" && evento.target.tagName !== "BUTTON") return;
+      const modal = document.getElementById("modal-video");
+      const player = document.getElementById("modal-video-player");
+      player.pause();
+      player.src = "";
+      modal.classList.add("hidden");
+    }
+
+    function iniciarColeta(form) {
+      const botao = form.querySelector("button");
+      botao.disabled = true;
+      botao.textContent = "⏳ A coletar...";
     }
   </script>
 </body>
