@@ -51,6 +51,7 @@
     </form>
 
     <form id="filtros" method="get" class="hidden grid grid-cols-2 gap-2 mb-4 bg-slate-900 p-3 rounded-xl text-sm">
+      <input type="hidden" name="pais_definido" value="1">
       <label class="flex flex-col text-xs text-slate-400">
         Nicho
         <select name="nicho" class="mt-1 bg-slate-800 rounded-lg px-2 py-1.5 text-slate-100">
@@ -68,15 +69,18 @@
           <option value="instagram" {% if rede == 'instagram' %}selected{% endif %}>Instagram</option>
         </select>
       </label>
-      <label class="flex flex-col text-xs text-slate-400">
-        País
-        <select name="pais" class="mt-1 bg-slate-800 rounded-lg px-2 py-1.5 text-slate-100">
-          <option value="">Todos</option>
+      <div class="col-span-2 flex flex-col text-xs text-slate-400">
+        País (várias opções ao mesmo tempo)
+        <div class="mt-1 flex flex-wrap gap-2">
           {% for p in paises %}
-            <option value="{{ p }}" {% if p == pais %}selected{% endif %}>{{ p }}</option>
+            <label class="flex items-center gap-1 bg-slate-800 rounded-lg px-2 py-1.5">
+              <input type="checkbox" name="pais" value="{{ p }}" class="rounded" {% if p in pais %}checked{% endif %}>
+              {{ p }}
+            </label>
           {% endfor %}
-        </select>
-      </label>
+        </div>
+        <span class="text-[10px] text-slate-500 mt-1">Sem nenhuma marcada = todos os países</span>
+      </div>
       <label class="flex flex-col text-xs text-slate-400">
         Período
         <select name="periodo" class="mt-1 bg-slate-800 rounded-lg px-2 py-1.5 text-slate-100">

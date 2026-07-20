@@ -17,10 +17,19 @@ app = Flask(__name__)
 db.init_db()
 
 
+# países mostrados por omissão até o utilizador escolher outros no filtro
+PAISES_PADRAO = ["PT", "BR"]
+
+
 def _filtros():
     nicho = request.args.get("nicho", "").strip()
     rede = request.args.get("rede", "").strip()
-    pais = request.args.get("pais", "").strip().upper()
+    if "pais_definido" in request.args:
+        # o filtro já foi submetido pelo menos uma vez — respeita a escolha,
+        # mesmo que tenha ficado sem nenhuma marcada (= "todos os países")
+        pais = [p.upper() for p in request.args.getlist("pais") if p]
+    else:
+        pais = list(PAISES_PADRAO)
     periodo = request.args.get("periodo", "semana")
     de = request.args.get("de", "")
     ate = request.args.get("ate", "")
@@ -48,8 +57,9 @@ def index():
         sql += " AND rede = ?"
         params.append(rede)
     if pais:
-        sql += " AND pais = ?"
-        params.append(pais)
+        marcadores = ",".join("?" * len(pais))
+        sql += f" AND pais IN ({marcadores})"
+        params.extend(pais)
     if de:
         sql += " AND date(data_coleta) >= date(?)"
         params.append(de)
@@ -64,8 +74,10 @@ def index():
         videos = con.execute(sql, params).fetchall()
         nichos = [r["nicho"] for r in con.execute(
             "SELECT DISTINCT nicho FROM videos ORDER BY nicho").fetchall()]
-        paises = [r["pais"] for r in con.execute(
+        paises_com_dados = [r["pais"] for r in con.execute(
             "SELECT DISTINCT pais FROM videos WHERE pais != '' ORDER BY pais").fetchall()]
+        # PT/BR aparecem sempre como opção, mesmo antes de haver dados coletados
+        paises = sorted(set(paises_com_dados) | set(PAISES_PADRAO))
 
     cartoes = []
     for v in videos:
