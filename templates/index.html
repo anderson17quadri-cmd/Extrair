@@ -110,11 +110,24 @@
             <p class="text-slate-400 text-xs mb-1">Legenda sugerida (com crédito)</p>
             <p id="legenda-{{ v.id }}">{{ v.legenda }}</p>
           </div>
-          <div class="flex gap-2 mt-auto">
+          <div class="flex flex-wrap gap-2 mt-auto">
             <button onclick="copiarLegenda('{{ v.id }}', this)"
                     class="flex-1 bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg text-sm">
               📋 Copiar legenda
             </button>
+            {% if v.ficheiro_local %}
+              <a href="/media/{{ v.nicho }}/{{ v.id }}.mp4?download=1" download
+                 class="flex-1 text-center bg-sky-700 hover:bg-sky-600 px-3 py-2 rounded-lg text-sm">
+                ⬇️ Baixar vídeo
+              </a>
+            {% else %}
+              <form method="post" action="/baixar/{{ v.id }}" class="flex-1">
+                <input type="hidden" name="voltar" value="{{ request.full_path }}">
+                <button class="w-full bg-sky-700 hover:bg-sky-600 px-3 py-2 rounded-lg text-sm">
+                  ⬇️ Baixar vídeo
+                </button>
+              </form>
+            {% endif %}
             <form method="post" action="/usado/{{ v.id }}" class="flex-1">
               <input type="hidden" name="voltar" value="{{ request.full_path }}">
               {% if v.usado %}

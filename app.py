@@ -5,11 +5,12 @@ Lista os candidatos por score, com preview, métricas e legenda sugerida
 """
 from datetime import date, timedelta
 
+import requests
 from flask import Flask, abort, redirect, render_template, request, send_from_directory
 
 import config
 import db
-from downloader import gerar_legenda
+from downloader import baixar_video, gerar_legenda
 
 app = Flask(__name__)
 db.init_db()
@@ -93,7 +94,32 @@ def media(nicho, video_id):
     pasta = (config.DOWNLOADS_DIR / nicho).resolve()
     if not pasta.is_relative_to(config.DOWNLOADS_DIR.resolve()):
         abort(404)
-    return send_from_directory(pasta, f"{video_id}.mp4")
+    forcar_download = request.args.get("download") == "1"
+    return send_from_directory(pasta, f"{video_id}.mp4", as_attachment=forcar_download)
+
+
+@app.route("/baixar/<video_id>", methods=["POST"])
+def baixar(video_id):
+    """Descarrega o vídeo do candidato na hora, a pedido do dashboard."""
+    with db.ligacao() as con:
+        video = con.execute("SELECT * FROM videos WHERE id = ?", (video_id,)).fetchone()
+    if video is None:
+        abort(404)
+
+    if not video["ficheiro_local"]:
+        legenda = gerar_legenda(video["username_autor"], video["descricao"])
+        try:
+            caminho = baixar_video(video)
+        except requests.RequestException as erro:
+            caminho = None
+            print(f"[dashboard] erro ao baixar {video_id}: {erro}")
+        with db.ligacao() as con:
+            con.execute(
+                "UPDATE videos SET ficheiro_local = ?, legenda_sugerida = ? WHERE id = ?",
+                (caminho, legenda, video_id),
+            )
+
+    return redirect(request.form.get("voltar") or "/")
 
 
 if __name__ == "__main__":
