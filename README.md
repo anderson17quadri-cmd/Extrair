@@ -127,6 +127,43 @@ coletado, e não como parâmetro de coleta: quanto mais vídeos coletares (maior
 ter para filtrar. Se um dia confirmares que a tua conta RapidAPI tem um plano
 que suporta filtro por região na API, avisa que ligamos isso em `buscar_api_tiktok()`.
 
+## Baixar um perfil inteiro (fotos + vídeos)
+
+Fluxo diferente do Radar Viral: aqui o objetivo não é achar o que está a
+viralizar, é levar **tudo** o que um perfil já publicou (fotos, vídeos e
+carrosséis) — útil para montar uma landing page com o conteúdo do próprio
+cliente antes de fechar negócio. Não passa pelo score/candidato/dashboard.
+
+```bash
+python perfil.py --perfil https://instagram.com/nomedaempresa
+python perfil.py --perfil nomedaempresa --quantidade 100
+python perfil.py --perfil nomedaempresa --mock       # testa sem gastar API
+```
+
+Os ficheiros vão para `downloads/perfis/{username}/`, com um
+`legendas.json` ao lado guardando a legenda original, o link do post e o
+tipo (foto/vídeo) de cada ficheiro — útil para copiar texto pronto para a
+landing page.
+
+⚠️ **Ainda não validado com uma chamada real** (ao contrário do resto do
+coletor, que já foi testado ao vivo). A API "Instagram Social" tem um
+endpoint de posts por utilizador, mas paginação e nomes de campo podem
+variar. Antes de rodar em massa:
+
+```bash
+python perfil.py --perfil nomedaempresa --quantidade 3 --debug
+```
+
+O `--debug` mostra a resposta crua da 1ª página. Se os campos vierem
+diferentes do esperado, ajusta `extrair_midias()` e `buscar_posts_perfil()`
+em `perfil.py` (mesmo processo usado para validar TikTok e a busca do
+Instagram).
+
+**Use isto só para perfis cujo conteúdo você tem autorização para usar**
+(o próprio cliente, mesmo antes de fechar contrato) — baixar em massa
+fotos/vídeos de terceiros para reaproveitar em outro lugar pode violar os
+Termos de Uso do Instagram e direitos autorais de quem publicou.
+
 ## Agendar o coletor
 
 **Opção A — cron** (proot Ubuntu com `cronie`/`cron` instalado):

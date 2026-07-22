@@ -1,0 +1,35 @@
+[
+  {
+    "shortcode": "Cy1FotoPerfil",
+    "media_type": 1,
+    "caption": "Nosso espaço novo, venha conhecer! ✂️",
+    "_horas_atras": 10,
+    "taken_at": null,
+    "user": {"username": "barbearia.exemplo", "full_name": "Barbearia Exemplo"},
+    "permalink": "https://www.instagram.com/p/Cy1FotoPerfil/",
+    "media_url": "https://example.com/ig/perfil/foto1.jpg"
+  },
+  {
+    "shortcode": "Cy2VideoPerfil",
+    "media_type": 2,
+    "caption": "Corte degradê do dia 💈",
+    "_horas_atras": 30,
+    "taken_at": null,
+    "user": {"username": "barbearia.exemplo", "full_name": "Barbearia Exemplo"},
+    "permalink": "https://www.instagram.com/p/Cy2VideoPerfil/",
+    "media_url": "https://example.com/ig/perfil/video1.mp4"
+  },
+  {
+    "shortcode": "Cy3CarrosselPerfil",
+    "media_type": 8,
+    "caption": "Antes e depois de hoje",
+    "_horas_atras": 50,
+    "taken_at": null,
+    "user": {"username": "barbearia.exemplo", "full_name": "Barbearia Exemplo"},
+    "permalink": "https://www.instagram.com/p/Cy3CarrosselPerfil/",
+    "carousel_media": [
+      {"media_type": 1, "media_url": "https://example.com/ig/perfil/carrossel1_1.jpg"},
+      {"media_type": 1, "media_url": "https://example.com/ig/perfil/carrossel1_2.jpg"}
+    ]
+  }
+]

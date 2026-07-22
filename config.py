@@ -27,6 +27,13 @@ RAPIDAPI_HOST_INSTAGRAM = os.getenv(
 RAPIDAPI_ENDPOINT_INSTAGRAM = os.getenv(
     "RAPIDAPI_ENDPOINT_INSTAGRAM", "/api/v1/instagram/search"
 )
+# Endpoint que lista TODOS os posts (fotos + vídeos) de um perfil — usado por
+# perfil.py. Ainda não validado com uma chamada real (ver README, secção
+# "Baixar um perfil inteiro") — confirma o nome do parâmetro e da paginação
+# com --debug antes de correr em massa.
+RAPIDAPI_ENDPOINT_INSTAGRAM_POSTS = os.getenv(
+    "RAPIDAPI_ENDPOINT_INSTAGRAM_POSTS", "/api/v1/instagram/posts"
+)
 
 # --- Score viral --------------------------------------------------------
 # Vídeos com score >= threshold ficam marcados como "candidato"
