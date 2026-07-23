@@ -9,13 +9,15 @@ Uso:
 Pensado para montar landing pages com o próprio conteúdo do cliente (fotos e
 vídeos que ele já publicou), não para reusar conteúdo de terceiros.
 
-IMPORTANTE — endpoint ainda não validado com uma chamada real (ao contrário
-do resto do coletor): a API "Instagram Social" tem um endpoint de posts por
-utilizador, mas o nome exato dos campos (paginação, urls das fotos/vídeos no
-carrossel) pode variar. Corre primeiro com --mock, depois com --debug e
---quantidade 3 para conferir a resposta real e ajustar `extrair_midias()` e
-`buscar_posts_perfil()` se precisar — é o mesmo processo que já foi feito
-para validar o coletor de TikTok e a busca do Instagram (ver README).
+Endpoint /api/v1/instagram/posts e paginação (meta.pagination_token) já
+validados com uma chamada real. Duas coisas ainda por confirmar — testa com
+--debug e olha o debug_ultima_pagina.json gerado:
+  1. Posts em carrossel (product_type="carousel"): a API só devolveu a capa
+     nos testes feitos até agora — se existir um campo com as fotos extras,
+     ajusta `extrair_midias()` para usá-lo.
+  2. Vídeos/reels: nenhum post de vídeo apareceu ainda nos testes — confirma
+     o campo da URL (`video_url`?) e o valor de `product_type` quando
+     aparecer um.
 
 Este script é independente do fluxo de "Radar Viral" (score/candidato/
 dashboard) — aqui o objetivo é levar tudo o que o perfil publicou, não achar
@@ -79,9 +81,14 @@ def buscar_posts_perfil(username: str, quantidade: int, debug: bool = False) -> 
         resposta.raise_for_status()
         corpo = resposta.json()
         if debug and pagina == 0:
-            print("--- [debug] resposta crua da 1ª página ---")
-            print(json.dumps(corpo, indent=2, ensure_ascii=False)[:4000])
-            print("--- [debug] fim ---")
+            destino_debug = Path(__file__).parent / "debug_ultima_pagina.json"
+            destino_debug.write_text(json.dumps(corpo, indent=2, ensure_ascii=False), encoding="utf-8")
+            tipos = sorted({
+                (item.get("media_type"), item.get("product_type"))
+                for item in _primeira_lista(corpo)
+            })
+            print(f"--- [debug] resposta completa salva em {destino_debug} ---")
+            print(f"--- [debug] combinações (media_type, product_type) encontradas: {tipos} ---")
 
         pagina_itens = _primeira_lista(corpo)
         if not pagina_itens:
@@ -109,20 +116,37 @@ def buscar_posts_perfil(username: str, quantidade: int, debug: bool = False) -> 
 def extrair_midias(item: dict) -> list[dict]:
     """Devolve uma lista de {url, tipo} — um item por foto/vídeo do post.
 
-    media_type: 1 = foto, 2 = vídeo, 8 = carrossel (várias fotos/vídeos).
+    Confirmado com a API real (Instagram Social): media_type nem sempre é 8
+    para carrossel — vem `product_type: "carousel"` com media_type 1 (a API
+    só devolve a capa nesse caso; ver README/debug_ultima_pagina.json para
+    checar se existe algum campo com as restantes fotos/vídeos do carrossel).
     """
-    tipo = item.get("media_type")
-    if tipo == 8:
-        midias = []
-        for sub in item.get("carousel_media") or item.get("resources") or []:
-            url = sub.get("media_url") or sub.get("video_url") or sub.get("display_url")
-            if url:
-                midias.append({"url": url, "tipo": "video" if sub.get("media_type") == 2 else "foto"})
-        return midias
-    url = item.get("media_url") or item.get("video_url") or item.get("display_url")
+    eh_carrossel = item.get("media_type") == 8 or item.get("product_type") == "carousel"
+    if eh_carrossel:
+        sub_itens = (
+            item.get("carousel_media")
+            or item.get("resources")
+            or item.get("carousel")
+            or item.get("sidecar_media")
+        )
+        if sub_itens:
+            midias = []
+            for sub in sub_itens:
+                url = sub.get("media_url") or sub.get("video_url") or sub.get("display_url")
+                if url:
+                    midias.append({"url": url, "tipo": "video" if sub.get("media_type") == 2 else "foto"})
+            if midias:
+                return midias
+        # a API não devolveu as fotos extras do carrossel nesta resposta —
+        # baixa pelo menos a capa, para não perder o post inteiro
+        url = item.get("media_url") or item.get("display_url")
+        return [{"url": url, "tipo": "foto"}] if url else []
+
+    eh_video = item.get("media_type") == 2 or item.get("product_type") in ("clips", "reel", "igtv", "video")
+    url = item.get("video_url") or item.get("media_url") or item.get("display_url")
     if not url:
         return []
-    return [{"url": url, "tipo": "video" if tipo == 2 else "foto"}]
+    return [{"url": url, "tipo": "video" if eh_video else "foto"}]
 
 
 def gerar_legenda(username: str, descricao: str) -> str:

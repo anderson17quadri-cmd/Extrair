@@ -5,6 +5,9 @@
 *.db
 downloads/
 
+# Dump de depuração do perfil.py (pode conter tokens de paginação)
+debug_ultima_pagina.json
+
 # Python
 __pycache__/
 *.pyc
