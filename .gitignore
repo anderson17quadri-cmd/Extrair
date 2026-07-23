@@ -8,6 +8,9 @@ downloads/
 # Dump de depuração do perfil.py (pode conter tokens de paginação)
 debug_ultima_pagina.json
 
+# Contador local de chamadas à API
+uso_api.json
+
 # Python
 __pycache__/
 *.pyc

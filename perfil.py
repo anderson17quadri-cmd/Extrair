@@ -33,6 +33,7 @@ from urllib.parse import urlparse
 import requests
 
 import config
+import uso_api
 
 CURSORES_POSSIVEIS = ["pagination_token", "next_cursor", "end_cursor", "next_page_id"]
 MAX_PAGINAS = 20
@@ -78,6 +79,7 @@ def buscar_posts_perfil(username: str, quantidade: int, debug: bool = False) -> 
             params={"username": username, **parametros_extra},
             timeout=30,
         )
+        uso_api.registar_chamada("instagram-posts")
         resposta.raise_for_status()
         corpo = resposta.json()
         if debug and pagina == 0:

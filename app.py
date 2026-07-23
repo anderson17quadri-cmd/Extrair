@@ -15,6 +15,7 @@ import coletor
 import config
 import db
 import perfil
+import uso_api
 from downloader import baixar_video, gerar_legenda
 
 app = Flask(__name__)
@@ -104,6 +105,7 @@ def index():
         incluir_usados=incluir_usados,
         threshold=config.SCORE_THRESHOLD,
         erro=request.args.get("erro", ""),
+        uso=uso_api.resumo(),
     )
 
 
@@ -171,13 +173,20 @@ def perfil_pagina():
         galeria=_galeria_perfil(username) if username else [],
         perfis_existentes=perfis_existentes,
         erro=request.args.get("erro", ""),
+        aviso=request.args.get("aviso", ""),
+        uso=uso_api.resumo(),
     )
 
 
 @app.route("/perfil/baixar", methods=["POST"])
 def perfil_baixar():
-    """Dispara o download de um perfil inteiro a partir da dashboard."""
+    """Dispara o download de um perfil inteiro a partir da dashboard.
+
+    Se o perfil já tiver conteúdo baixado, não gasta cota da API de novo a
+    não ser que o pedido venha com forcar=1 (botão "Buscar posts novos").
+    """
     entrada = request.form.get("perfil", "").strip()
+    forcar = request.form.get("forcar") == "1"
     try:
         quantidade = min(max(int(request.form.get("quantidade") or 30), 1), 100)
     except ValueError:
@@ -185,14 +194,20 @@ def perfil_baixar():
 
     if not entrada:
         return redirect("/?erro=Cola+o+link+ou+username+do+perfil")
+
+    try:
+        username = perfil.extrair_username(entrada)
+    except ValueError as erro:
+        return redirect(f"/?erro={erro}")
+
+    if not forcar and _galeria_perfil(username):
+        return redirect(f"/?username={username}&aviso=ja_existe")
+
     if not config.RAPIDAPI_KEY:
         return redirect("/?erro=Falta+a+RAPIDAPI_KEY+no+.env+do+servidor")
 
     try:
-        username = perfil.extrair_username(entrada)
         perfil.baixar_perfil(username, quantidade, mock=False)
-    except ValueError as erro:
-        return redirect(f"/?erro={erro}")
     except (RuntimeError, requests.RequestException) as erro:
         return redirect(f"/?erro=Erro+na+API%3A+{erro}")
 
