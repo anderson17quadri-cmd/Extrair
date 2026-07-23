@@ -48,7 +48,7 @@ def _filtros():
     return nicho, rede, pais, periodo, de, ate, incluir_usados
 
 
-@app.route("/")
+@app.route("/radar-viral")
 def index():
     nicho, rede, pais, periodo, de, ate, incluir_usados = _filtros()
 
@@ -115,18 +115,18 @@ def nova_coleta():
     rede = request.form.get("rede", "tiktok").strip() or "tiktok"
 
     if not nicho:
-        return redirect("/?erro=Escreve+um+nicho+antes+de+coletar")
+        return redirect("/radar-viral?erro=Escreve+um+nicho+antes+de+coletar")
     if not config.RAPIDAPI_KEY:
-        return redirect("/?erro=Falta+a+RAPIDAPI_KEY+no+.env+do+servidor")
+        return redirect("/radar-viral?erro=Falta+a+RAPIDAPI_KEY+no+.env+do+servidor")
 
     try:
         coletor.coletar(nicho, hashtag, quantidade=20, rede=rede, mock=False)
     except requests.RequestException as erro:
-        return redirect(f"/?nicho={nicho}&rede={rede}&periodo=tudo&erro=Erro+na+API%3A+{erro}")
+        return redirect(f"/radar-viral?nicho={nicho}&rede={rede}&periodo=tudo&erro=Erro+na+API%3A+{erro}")
     except Exception as erro:
-        return redirect(f"/?nicho={nicho}&rede={rede}&periodo=tudo&erro={erro}")
+        return redirect(f"/radar-viral?nicho={nicho}&rede={rede}&periodo=tudo&erro={erro}")
 
-    return redirect(f"/?nicho={nicho}&rede={rede}&periodo=tudo")
+    return redirect(f"/radar-viral?nicho={nicho}&rede={rede}&periodo=tudo")
 
 
 @app.route("/usado/<video_id>", methods=["POST"])
@@ -134,7 +134,7 @@ def marcar_usado(video_id):
     novo = 0 if request.form.get("desfazer") else 1
     with db.ligacao() as con:
         con.execute("UPDATE videos SET usado = ? WHERE id = ?", (novo, video_id))
-    return redirect(request.form.get("voltar") or "/")
+    return redirect(request.form.get("voltar") or "/radar-viral")
 
 
 def _pasta_perfil(username: str):
@@ -160,7 +160,7 @@ def _galeria_perfil(username: str) -> list[dict]:
     return itens
 
 
-@app.route("/perfil")
+@app.route("/")
 def perfil_pagina():
     username = request.args.get("username", "").strip()
     with_perfis = config.DOWNLOADS_DIR / "perfis"
@@ -184,19 +184,19 @@ def perfil_baixar():
         quantidade = 30
 
     if not entrada:
-        return redirect("/perfil?erro=Cola+o+link+ou+username+do+perfil")
+        return redirect("/?erro=Cola+o+link+ou+username+do+perfil")
     if not config.RAPIDAPI_KEY:
-        return redirect("/perfil?erro=Falta+a+RAPIDAPI_KEY+no+.env+do+servidor")
+        return redirect("/?erro=Falta+a+RAPIDAPI_KEY+no+.env+do+servidor")
 
     try:
         username = perfil.extrair_username(entrada)
         perfil.baixar_perfil(username, quantidade, mock=False)
     except ValueError as erro:
-        return redirect(f"/perfil?erro={erro}")
+        return redirect(f"/?erro={erro}")
     except (RuntimeError, requests.RequestException) as erro:
-        return redirect(f"/perfil?erro=Erro+na+API%3A+{erro}")
+        return redirect(f"/?erro=Erro+na+API%3A+{erro}")
 
-    return redirect(f"/perfil?username={username}")
+    return redirect(f"/?username={username}")
 
 
 @app.route("/perfil/midia/<username>/<path:arquivo>")
@@ -212,7 +212,7 @@ def perfil_zip():
     username = request.form.get("username", "").strip()
     arquivos = request.form.getlist("arquivo")
     if not username or not arquivos:
-        return redirect(f"/perfil?username={username}&erro=Seleciona+pelo+menos+um+ficheiro")
+        return redirect(f"/?username={username}&erro=Seleciona+pelo+menos+um+ficheiro")
 
     pasta = _pasta_perfil(username)
     buffer = io.BytesIO()
