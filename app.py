@@ -3,14 +3,18 @@
 Lista os candidatos por score, com preview, métricas e legenda sugerida
 (sempre com crédito ao autor original). Correr com: python app.py
 """
+import io
+import json
+import zipfile
 from datetime import date, timedelta
 
 import requests
-from flask import Flask, abort, redirect, render_template, request, send_from_directory
+from flask import Flask, abort, redirect, render_template, request, send_file, send_from_directory
 
 import coletor
 import config
 import db
+import perfil
 from downloader import baixar_video, gerar_legenda
 
 app = Flask(__name__)
@@ -131,6 +135,95 @@ def marcar_usado(video_id):
     with db.ligacao() as con:
         con.execute("UPDATE videos SET usado = ? WHERE id = ?", (novo, video_id))
     return redirect(request.form.get("voltar") or "/")
+
+
+def _pasta_perfil(username: str):
+    pasta = (config.DOWNLOADS_DIR / "perfis" / username).resolve()
+    base = (config.DOWNLOADS_DIR / "perfis").resolve()
+    if not pasta.is_relative_to(base):
+        abort(404)
+    return pasta
+
+
+def _galeria_perfil(username: str) -> list[dict]:
+    ficheiro_legendas = _pasta_perfil(username) / "legendas.json"
+    if not ficheiro_legendas.exists():
+        return []
+    legendas = json.loads(ficheiro_legendas.read_text(encoding="utf-8"))
+    pasta = _pasta_perfil(username)
+    itens = [
+        {"arquivo": nome, **info}
+        for nome, info in legendas.items()
+        if (pasta / nome).exists()
+    ]
+    itens.sort(key=lambda i: i["arquivo"], reverse=True)
+    return itens
+
+
+@app.route("/perfil")
+def perfil_pagina():
+    username = request.args.get("username", "").strip()
+    with_perfis = config.DOWNLOADS_DIR / "perfis"
+    perfis_existentes = sorted(p.name for p in with_perfis.iterdir() if p.is_dir()) if with_perfis.exists() else []
+    return render_template(
+        "perfil.html",
+        username=username,
+        galeria=_galeria_perfil(username) if username else [],
+        perfis_existentes=perfis_existentes,
+        erro=request.args.get("erro", ""),
+    )
+
+
+@app.route("/perfil/baixar", methods=["POST"])
+def perfil_baixar():
+    """Dispara o download de um perfil inteiro a partir da dashboard."""
+    entrada = request.form.get("perfil", "").strip()
+    try:
+        quantidade = min(max(int(request.form.get("quantidade") or 30), 1), 100)
+    except ValueError:
+        quantidade = 30
+
+    if not entrada:
+        return redirect("/perfil?erro=Cola+o+link+ou+username+do+perfil")
+    if not config.RAPIDAPI_KEY:
+        return redirect("/perfil?erro=Falta+a+RAPIDAPI_KEY+no+.env+do+servidor")
+
+    try:
+        username = perfil.extrair_username(entrada)
+        perfil.baixar_perfil(username, quantidade, mock=False)
+    except ValueError as erro:
+        return redirect(f"/perfil?erro={erro}")
+    except (RuntimeError, requests.RequestException) as erro:
+        return redirect(f"/perfil?erro=Erro+na+API%3A+{erro}")
+
+    return redirect(f"/perfil?username={username}")
+
+
+@app.route("/perfil/midia/<username>/<path:arquivo>")
+def perfil_midia(username, arquivo):
+    pasta = _pasta_perfil(username)
+    forcar_download = request.args.get("download") == "1"
+    return send_from_directory(pasta, arquivo, as_attachment=forcar_download)
+
+
+@app.route("/perfil/zip", methods=["POST"])
+def perfil_zip():
+    """Zipa só os ficheiros selecionados na galeria, para levar para a landing page."""
+    username = request.form.get("username", "").strip()
+    arquivos = request.form.getlist("arquivo")
+    if not username or not arquivos:
+        return redirect(f"/perfil?username={username}&erro=Seleciona+pelo+menos+um+ficheiro")
+
+    pasta = _pasta_perfil(username)
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zip_ficheiro:
+        for nome in arquivos:
+            caminho = (pasta / nome).resolve()
+            if caminho.is_relative_to(pasta) and caminho.exists():
+                zip_ficheiro.write(caminho, arcname=nome)
+    buffer.seek(0)
+    return send_file(buffer, mimetype="application/zip", as_attachment=True,
+                      download_name=f"{username}-selecionados.zip")
 
 
 @app.route("/media/<nicho>/<video_id>.mp4")

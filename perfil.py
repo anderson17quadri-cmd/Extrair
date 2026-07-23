@@ -45,7 +45,7 @@ def extrair_username(entrada: str) -> str:
         caminho = urlparse(entrada if "://" in entrada else f"https://{entrada}").path
         partes = [p for p in caminho.split("/") if p]
         if not partes:
-            sys.exit(f"ERRO: não consegui extrair o username de '{entrada}'")
+            raise ValueError(f"não consegui extrair o username de '{entrada}'")
         return partes[0]
     return entrada.lstrip("@")
 
@@ -166,8 +166,8 @@ def baixar_ficheiro(url: str, destino: Path) -> None:
 
 def baixar_perfil(username: str, quantidade: int, mock: bool = False, debug: bool = False) -> int:
     if not mock and not config.RAPIDAPI_KEY:
-        sys.exit(
-            "ERRO: RAPIDAPI_KEY não definida. Copia .env.example para .env "
+        raise RuntimeError(
+            "RAPIDAPI_KEY não definida. Copia .env.example para .env "
             "e coloca lá a tua chave (nunca no código)."
         )
 
@@ -223,8 +223,11 @@ def main():
     parser.add_argument("--debug", action="store_true", help="Mostra a resposta crua da 1ª página da API")
     args = parser.parse_args()
 
-    username = extrair_username(args.perfil)
-    baixar_perfil(username, args.quantidade, mock=args.mock, debug=args.debug)
+    try:
+        username = extrair_username(args.perfil)
+        baixar_perfil(username, args.quantidade, mock=args.mock, debug=args.debug)
+    except (ValueError, RuntimeError) as erro:
+        sys.exit(f"ERRO: {erro}")
 
 
 if __name__ == "__main__":
