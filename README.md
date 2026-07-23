@@ -145,19 +145,27 @@ Os ficheiros vão para `downloads/perfis/{username}/`, com um
 tipo (foto/vídeo) de cada ficheiro — útil para copiar texto pronto para a
 landing page.
 
-⚠️ **Ainda não validado com uma chamada real** (ao contrário do resto do
-coletor, que já foi testado ao vivo). A API "Instagram Social" tem um
-endpoint de posts por utilizador, mas paginação e nomes de campo podem
-variar. Antes de rodar em massa:
+Validado com chamadas reais (`/api/v1/instagram/posts`, paginação via
+`meta.pagination_token`): fotos, posts normais (`product_type: "feed"`) e
+vídeos/reels (`product_type: "clips"`, salvos como `.mp4`) baixam certinho.
+
+Limitação real da API, descoberta testando (não é bug nosso): em posts de
+**carrossel** (`product_type: "carousel"`) o endpoint de listagem só devolve
+a foto de capa — as demais fotos/vídeos do carrossel não vêm nessa chamada.
+Pegar o carrossel completo exigiria 1 chamada de API extra por post desse
+tipo (mais lento e mais cota gasta), então por agora `perfil.py` baixa só a
+capa desses posts.
+
+Se algum dia precisar investigar a resposta crua da API (ex.: a API mudou
+algo), usa:
 
 ```bash
 python perfil.py --perfil nomedaempresa --quantidade 3 --debug
 ```
 
-O `--debug` mostra a resposta crua da 1ª página. Se os campos vierem
-diferentes do esperado, ajusta `extrair_midias()` e `buscar_posts_perfil()`
-em `perfil.py` (mesmo processo usado para validar TikTok e a busca do
-Instagram).
+O `--debug` salva a resposta completa em `debug_ultima_pagina.json` e
+mostra no terminal quais combinações de `(media_type, product_type)`
+apareceram.
 
 **Use isto só para perfis cujo conteúdo você tem autorização para usar**
 (o próprio cliente, mesmo antes de fechar contrato) — baixar em massa
