@@ -90,7 +90,10 @@ def buscar_posts_perfil(username: str, quantidade: int, debug: bool = False) -> 
         if len(itens) >= quantidade:
             break
 
-        cursor = next(
+        # confirmado numa chamada real (endpoint de comentários, mesma família
+        # de API): o cursor vem em corpo["meta"]["pagination_token"]
+        meta = corpo.get("meta") or {}
+        cursor = meta.get("pagination_token") or next(
             (corpo[c] for c in CURSORES_POSSIVEIS if corpo.get(c)),
             None,
         )
