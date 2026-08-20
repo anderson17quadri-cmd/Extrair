@@ -127,6 +127,51 @@ coletado, e não como parâmetro de coleta: quanto mais vídeos coletares (maior
 ter para filtrar. Se um dia confirmares que a tua conta RapidAPI tem um plano
 que suporta filtro por região na API, avisa que ligamos isso em `buscar_api_tiktok()`.
 
+## Baixar um perfil inteiro (fotos + vídeos)
+
+Fluxo diferente do Radar Viral: aqui o objetivo não é achar o que está a
+viralizar, é levar **tudo** o que um perfil já publicou (fotos, vídeos e
+carrosséis) — útil para montar uma landing page com o conteúdo do próprio
+cliente antes de fechar negócio. Não passa pelo score/candidato/dashboard.
+
+```bash
+python perfil.py --perfil https://instagram.com/nomedaempresa
+python perfil.py --perfil nomedaempresa --quantidade 100
+python perfil.py --perfil nomedaempresa --mock       # testa sem gastar API
+```
+
+Os ficheiros vão para `downloads/perfis/{username}/`, com um
+`legendas.json` ao lado guardando a legenda original, o link do post e o
+tipo (foto/vídeo) de cada ficheiro — útil para copiar texto pronto para a
+landing page.
+
+Validado com chamadas reais (`/api/v1/instagram/posts`, paginação via
+`meta.pagination_token`): fotos, posts normais (`product_type: "feed"`) e
+vídeos/reels (`product_type: "clips"`, salvos como `.mp4`) baixam certinho.
+
+Limitação real da API, descoberta testando (não é bug nosso): em posts de
+**carrossel** (`product_type: "carousel"`) o endpoint de listagem só devolve
+a foto de capa — as demais fotos/vídeos do carrossel não vêm nessa chamada.
+Pegar o carrossel completo exigiria 1 chamada de API extra por post desse
+tipo (mais lento e mais cota gasta), então por agora `perfil.py` baixa só a
+capa desses posts.
+
+Se algum dia precisar investigar a resposta crua da API (ex.: a API mudou
+algo), usa:
+
+```bash
+python perfil.py --perfil nomedaempresa --quantidade 3 --debug
+```
+
+O `--debug` salva a resposta completa em `debug_ultima_pagina.json` e
+mostra no terminal quais combinações de `(media_type, product_type)`
+apareceram.
+
+**Use isto só para perfis cujo conteúdo você tem autorização para usar**
+(o próprio cliente, mesmo antes de fechar contrato) — baixar em massa
+fotos/vídeos de terceiros para reaproveitar em outro lugar pode violar os
+Termos de Uso do Instagram e direitos autorais de quem publicou.
+
 ## Agendar o coletor
 
 **Opção A — cron** (proot Ubuntu com `cronie`/`cron` instalado):

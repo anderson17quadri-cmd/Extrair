@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Baixar perfil · Radar Viral</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+  <div class="max-w-3xl mx-auto px-3 py-4">
+    <header class="mb-1 flex items-center justify-between gap-2">
+      <h1 class="text-xl font-bold">📥 Baixar perfil</h1>
+      <a href="/radar-viral" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg text-slate-300">
+        📡 Radar Viral
+      </a>
+    </header>
+    <p class="text-[11px] text-slate-500 mb-3">
+      📊 {{ uso.hoje }} chamada(s) à API hoje · {{ uso.mes }} este mês
+      <span class="text-slate-600">(contagem local — o limite real está no teu painel da RapidAPI)</span>
+    </p>
+
+    {% if erro %}
+      <p class="mb-3 bg-red-950 border border-red-800 text-red-300 text-xs rounded-lg px-3 py-2">
+        ⚠️ {{ erro }}
+      </p>
+    {% endif %}
+
+    {% if aviso == "ja_existe" %}
+      <div class="mb-3 bg-amber-950 border border-amber-800 text-amber-300 text-xs rounded-lg px-3 py-2 flex items-center justify-between gap-2 flex-wrap">
+        <span>ℹ️ @{{ username }} já tem conteúdo baixado (mostrado abaixo) — não gastei cota da API de novo.</span>
+        <form method="post" action="/perfil/baixar" onsubmit="iniciarDownload(this)">
+          <input type="hidden" name="perfil" value="{{ username }}">
+          <input type="hidden" name="forcar" value="1">
+          <button class="bg-amber-700 hover:bg-amber-600 px-2 py-1 rounded text-[11px] whitespace-nowrap">
+            🔄 Buscar posts novos (gasta cota)
+          </button>
+        </form>
+      </div>
+    {% endif %}
+
+    <form method="post" action="/perfil/baixar" onsubmit="iniciarDownload(this)"
+          class="flex flex-wrap items-end gap-2 mb-4 bg-slate-900 p-3 rounded-xl text-sm">
+      <label class="flex flex-col text-xs text-slate-400 flex-1 min-w-[160px]">
+        Link ou username do Instagram
+        <input type="text" name="perfil" list="perfis-existentes" required value="{{ username }}"
+               placeholder="https://instagram.com/nomedaempresa"
+               class="mt-1 bg-slate-800 rounded-lg px-2 py-1.5 text-slate-100">
+        <datalist id="perfis-existentes">
+          {% for p in perfis_existentes %}<option value="{{ p }}">{% endfor %}
+        </datalist>
+      </label>
+      <label class="flex flex-col text-xs text-slate-400 w-24">
+        Qtd. posts
+        <input type="number" name="quantidade" value="30" min="1" max="100"
+               class="mt-1 bg-slate-800 rounded-lg px-2 py-1.5 text-slate-100">
+      </label>
+      <button class="bg-sky-600 hover:bg-sky-500 px-4 py-2 rounded-lg font-medium">
+        ⬇️ Baixar perfil
+      </button>
+    </form>
+
+    {% if username and not galeria %}
+      <p class="text-slate-500 text-center py-16 text-sm">
+        Ainda não há nada baixado para <strong>@{{ username }}</strong>.
+        Usa o formulário acima para coletar.
+      </p>
+    {% elif not username %}
+      <p class="text-slate-500 text-center py-16 text-sm">
+        Cola o link (ou username) de um perfil do Instagram acima para começar.
+      </p>
+    {% endif %}
+
+    {% if galeria %}
+    <form method="post" action="/perfil/zip" id="form-zip">
+      <input type="hidden" name="username" value="{{ username }}">
+      <div class="flex items-center justify-between mb-2 text-xs text-slate-400">
+        <span>@{{ username }} — {{ galeria|length }} ficheiro(s)</span>
+        <div class="flex gap-2">
+          <button type="button" onclick="marcarTodos(true)" class="underline">Selecionar todos</button>
+          <button type="button" onclick="marcarTodos(false)" class="underline">Limpar</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-16">
+        {% for item in galeria %}
+        <label class="relative bg-slate-900 rounded-lg overflow-hidden block cursor-pointer">
+          <input type="checkbox" name="arquivo" value="{{ item.arquivo }}"
+                 class="absolute top-1.5 left-1.5 z-10 w-5 h-5 rounded accent-sky-500">
+          <div class="aspect-square bg-black flex items-center justify-center">
+            {% if item.tipo == "video" %}
+              <video src="/perfil/midia/{{ username }}/{{ item.arquivo }}" muted playsinline preload="metadata"
+                     class="w-full h-full object-cover"></video>
+            {% else %}
+              <img src="/perfil/midia/{{ username }}/{{ item.arquivo }}" loading="lazy"
+                   class="w-full h-full object-cover" alt="">
+            {% endif %}
+          </div>
+          <div class="p-1.5">
+            <p class="text-[10px] text-slate-400 line-clamp-2">{{ item.legenda }}</p>
+            <a href="/perfil/midia/{{ username }}/{{ item.arquivo }}?download=1" download
+               onclick="event.stopPropagation()"
+               class="mt-1 inline-block bg-slate-700 hover:bg-slate-600 px-2 py-0.5 rounded text-[10px]">
+              ⬇️ Baixar este
+            </a>
+          </div>
+        </label>
+        {% endfor %}
+      </div>
+
+      <div class="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 p-3">
+        <div class="max-w-3xl mx-auto flex justify-end">
+          <button class="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-lg font-medium text-sm">
+            ⬇️ Baixar selecionados (.zip)
+          </button>
+        </div>
+      </div>
+    </form>
+    {% endif %}
+  </div>
+
+  <script>
+    function marcarTodos(valor) {
+      document.querySelectorAll('#form-zip input[type=checkbox]').forEach(c => c.checked = valor);
+    }
+
+    function iniciarDownload(form) {
+      const botao = form.querySelector("button");
+      botao.disabled = true;
+      botao.textContent = "⏳ A baixar... (pode demorar)";
+    }
+  </script>
+</body>
+</html>

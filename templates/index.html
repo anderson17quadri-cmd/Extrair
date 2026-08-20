@@ -10,11 +10,20 @@
   <div class="max-w-3xl mx-auto px-3 py-4">
     <header class="mb-3 flex items-center justify-between gap-2">
       <h1 class="text-xl font-bold">📡 Radar Viral</h1>
-      <button type="button" onclick="document.getElementById('filtros').classList.toggle('hidden')"
-              class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg text-slate-300">
-        ⚙️ Filtros
-      </button>
+      <div class="flex gap-2">
+        <a href="/" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg text-slate-300">
+          📥 Baixar perfil
+        </a>
+        <button type="button" onclick="document.getElementById('filtros').classList.toggle('hidden')"
+                class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg text-slate-300">
+          ⚙️ Filtros
+        </button>
+      </div>
     </header>
+    <p class="text-[11px] text-slate-500 mb-3">
+      📊 {{ uso.hoje }} chamada(s) à API hoje · {{ uso.mes }} este mês
+      <span class="text-slate-600">(contagem local — o limite real está no teu painel da RapidAPI)</span>
+    </p>
 
     {% if erro %}
       <p class="mb-3 bg-red-950 border border-red-800 text-red-300 text-xs rounded-lg px-3 py-2">

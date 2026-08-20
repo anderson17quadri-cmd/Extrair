@@ -24,6 +24,7 @@ import requests
 import config
 import db
 import score
+import uso_api
 
 
 def _extrair_hashtags(texto: str) -> str:
@@ -84,6 +85,7 @@ def buscar_api_tiktok(hashtag: str, quantidade: int) -> list[dict]:
         params={"keywords": hashtag, "count": quantidade, "cursor": 0},
         timeout=30,
     )
+    uso_api.registar_chamada("tiktok-search")
     resposta.raise_for_status()
     corpo = resposta.json()
     # tiktok-scraper7 devolve {"data": {"videos": [...]}}
@@ -156,6 +158,7 @@ def buscar_api_instagram(hashtag: str, quantidade: int) -> list[dict]:
         params={"search": hashtag},
         timeout=30,
     )
+    uso_api.registar_chamada("instagram-search")
     resposta.raise_for_status()
     corpo = resposta.json()
     itens = corpo.get("body") or []
